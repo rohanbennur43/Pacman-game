@@ -270,71 +270,79 @@ def euclideanHeuristic(position, problem, info={}):
 # This portion is incomplete.  Time to write code!  #
 #####################################################
 
-class CornersProblem(search.SearchProblem):
+class \
+        sProblem(search.SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
-
     """
 
     def __init__(self, startingGameState):
         """
+        Initializes the problem with the starting game state.
         Stores the walls, Pacman's starting position, and the coordinates of the four corners.
         """
-        self.walls = startingGameState.getWalls()
-        self.startingPosition = startingGameState.getPacmanPosition()
-        top, right = self.walls.height-2, self.walls.width-2
-        self.corners = ((1,1), (1,top), (right, 1), (right, top))
-        self._expanded = 0
+        self.walls = startingGameState.getWalls()  # Wall layout of the game
+        self.startingPosition = startingGameState.getPacmanPosition()  # Pacman's start position
+        top, right = self.walls.height - 2, self.walls.width - 2  # Defines boundary of the layout
+        self.corners = ((1, 1), (1, top), (right, 1), (right, top))  # Coordinates of the four corners
+        self._expanded = 0  # Counter for the number of expanded nodes
+        # Initial state: Pacman's starting position and corners not yet visited
         self.startState = (self.startingPosition, (False, False, False, False))
 
     def getStartState(self):
         """
-        Returns the start state (Pacman's starting position and corners not visited).
+        Returns the start state, consisting of Pacman's starting position and corners marked as unvisited.
         """
         return self.startState
 
     def isGoalState(self, state: Any):
         """
-        Returns whether the search state is a goal state of the problem.
+        Checks if the current state is a goal state, which is when all four corners have been visited.
         """
-        _, visited_corners = state
-        return all(visited_corners)
+        _, visited_corners = state  # Destructures state to get visited corners
+        return all(visited_corners)  # Goal if all corners have been marked as visited
 
     def getSuccessors(self, state):
-
+        """
+        Returns the list of possible successors from the current state.
+        Each successor is a tuple: (next_state, action, step_cost).
+        """
         successors = []
-        current_position, visited_corners = state
+        current_position, visited_corners = state  # Destructure state into position and visited corners
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             x, y = current_position
-            dx, dy = Actions.directionToVector(action)
-            next_x, next_y = int(x + dx), int(y + dy)
+            dx, dy = Actions.directionToVector(action)  # Convert action to movement vector
+            next_x, next_y = int(x + dx), int(y + dy)  # Calculate new position
 
-            if not self.walls[next_x][next_y]:  # Check if next position is valid
+            # Check if the next position is within bounds (not a wall)
+            if not self.walls[next_x][next_y]:
                 next_position = (next_x, next_y)
-                next_visited_corners = list(visited_corners)
+                next_visited_corners = list(visited_corners)  # Copy the visited corners list
 
-                # Check if we've reached a new corner
+                # If next position is a corner, mark it as visited
                 if next_position in self.corners:
                     corner_index = self.corners.index(next_position)
-                    next_visited_corners[corner_index] = True  # Mark corner as visited
+                    next_visited_corners[corner_index] = True  # Mark the corner as visited
 
+                # Append successor as a tuple (next state, action, cost)
                 successors.append(((next_position, tuple(next_visited_corners)), action, 1))
 
-        self._expanded += 1 # DO NOT CHANGE
+        self._expanded += 1  # Increment node expansion counter (for tracking purposes)
         return successors
 
     def getCostOfActions(self, actions):
         """
-        Returns the cost of a particular sequence of actions.  If those actions
-        include an illegal move, return 999999.  This is implemented for you.
+        Calculates the total cost of a sequence of actions.
+        Returns a high cost (999999) if the sequence includes any illegal moves.
         """
-        if actions == None: return 999999
-        x,y= self.startingPosition
+        if actions is None: return 999999  # Return high cost if no actions are given
+        x, y = self.startingPosition
         for action in actions:
-            dx, dy = Actions.directionToVector(action)
+            dx, dy = Actions.directionToVector(action)  # Convert action to movement vector
             x, y = int(x + dx), int(y + dy)
-            if self.walls[x][y]: return 999999
-        return len(actions)
+            if self.walls[x][y]: return 999999  # If move hits a wall, return high cost
+        return len(actions)  # Otherwise, return the total length of the action sequence
+
 
 
 
@@ -350,29 +358,29 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
        to reach the goal, helping A* search to prioritize nodes efficiently.
        """
     current_position, visited_corners = state
-    corners = problem.corners # These are the corner coordinates
+    corners = problem.corners # Corner coordinates
     unvisited_corners = [corner for i, corner in enumerate(corners) if not visited_corners[i]]
 
     if not unvisited_corners:
         return 0
-        # Calculate the heuristic as the minimum total distance required to visit all remaining corners
+        # Calculate heuristic as the minimum total distance needed to visit remaining corners
     total_distance = 0
     position = current_position
 
     # Loop through unvisited corners, summing distances in a way that approximates an efficient path
     while unvisited_corners:
-        # Find the closest corner to the current position
+        # Find closest corner to current position
         distances = [(util.manhattanDistance(position, corner), corner) for corner in unvisited_corners]
         min_distance, closest_corner = min(distances)
 
-        # Add the minimum distance to the total
+        # Add minimum distance to the total distance
         total_distance += min_distance
 
-        # Move to this closest corner and remove it from the unvisited list
+        # move to closest corner and remove it from unvisited list
         position = closest_corner
         unvisited_corners.remove(closest_corner)
 
-    return total_distance # Default to trivial solution
+    return total_distance # Go back to trivial
 
 
 
