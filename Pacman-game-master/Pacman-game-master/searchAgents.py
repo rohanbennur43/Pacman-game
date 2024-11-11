@@ -270,8 +270,7 @@ def euclideanHeuristic(position, problem, info={}):
 # This portion is incomplete.  Time to write code!  #
 #####################################################
 
-class \
-        sProblem(search.SearchProblem):
+class CornersProblem(search.SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
     """
